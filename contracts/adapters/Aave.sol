@@ -4,12 +4,12 @@ pragma solidity ^0.7.6;
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import { ILendingPool } from "./interfaces/ILendingPool.sol";
-import { Provider } from "../provider/Provider.sol";
+import { ILendingPool } from "../interfaces/ILendingPool.sol";
+import { AddressesProvider } from "./AddressesProvider.sol";
 
 /// @author Ganesh Gautham Elango
 /// @title Aave flash loan contract
-abstract contract Aave is Provider {
+abstract contract Aave is AddressesProvider {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 

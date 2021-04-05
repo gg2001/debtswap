@@ -3,13 +3,13 @@ pragma solidity ^0.7.6;
 
 import { IUniswapV2Callee } from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol";
 import { IUniswapV2Factory } from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
-import { ILendingPoolAddressesProvider } from "../Aave/interfaces/ILendingPoolAddressesProvider.sol";
-import { ILendingPool } from "../Aave/interfaces/ILendingPool.sol";
-import { IFlashLoanReceiver } from "../Aave/interfaces/IFlashLoanReceiver.sol";
+import { ILendingPoolAddressesProvider } from "../interfaces/ILendingPoolAddressesProvider.sol";
+import { ILendingPool } from "../interfaces/ILendingPool.sol";
+import { IFlashLoanReceiver } from "../interfaces/IFlashLoanReceiver.sol";
 
 /// @author Ganesh Gautham Elango
 /// @title Aave flash loan contract
-abstract contract Provider is IFlashLoanReceiver, IUniswapV2Callee {
+abstract contract AddressesProvider is IFlashLoanReceiver, IUniswapV2Callee {
     ILendingPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;
     ILendingPool public immutable override LENDING_POOL;
     IUniswapV2Factory public immutable uniswapFactory;
