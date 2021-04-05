@@ -11,7 +11,9 @@ import { Aave } from "./Aave/Aave.sol";
 
 /// @author Ganesh Gautham Elango
 /// @title Aave flash loan contract
-contract DebtSwap is Uniswap, Aave {
+contract DebtSwap is Aave, Uniswap {
+    using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     /// @param provider Aave lending pool addresses provider
     /// @param _uniswapFactory Uniswap V2 factory address

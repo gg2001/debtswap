@@ -14,26 +14,6 @@ abstract contract Uniswap is Provider {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    /// @dev Initiates flash loan
-    /// @param token The loan currency
-    /// @param repayToken The currency to repay in (same as token if loan, different if swap)
-    /// @param amount0Out Desired amount of token0 to borrow (0 if not being borrowed)
-    /// @param amount1Out Desired amount of token1 to borrow (0 if not being borrowed)
-    /// @param repayAmount The amount of to be repayed (0 if loan, getAmountIn value if swap)
-    /// @param userData A data parameter to be passed on to the `receiver` for any custom use
-    function flashLoan(
-        IUniswapV2Pair pair,
-        address token,
-        address repayToken,
-        uint256 amount0Out,
-        uint256 amount1Out,
-        uint256 repayAmount,
-        bytes memory userData
-    ) external {
-        bytes memory data = abi.encode(token, repayToken, repayAmount, userData);
-        pair.swap(amount0Out, amount1Out, address(this), data);
-    }
-
     /// @dev Uniswap flash loan/swap callback. Receives the token amount and gives it back + fees
     /// @param sender The msg.sender to Solo
     /// @param amount0 Amount of token0 received
