@@ -4,10 +4,11 @@ pragma solidity ^0.7.6;
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import { IUniswapV2Factory } from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+import { IUniswapV2Router02 } from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import { ILendingPoolAddressesProvider } from "../interfaces/ILendingPoolAddressesProvider.sol";
 import { ILendingPool } from "../interfaces/ILendingPool.sol";
 import { IFlashLoanReceiver } from "../interfaces/IFlashLoanReceiver.sol";
-import { IUniswapV2Factory } from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 
 /// @author Ganesh Gautham Elango
 /// @title Aave flash loan contract
@@ -18,13 +19,19 @@ abstract contract Aave is IFlashLoanReceiver {
     ILendingPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;
     ILendingPool public immutable override LENDING_POOL;
     IUniswapV2Factory public immutable uniswapFactory;
+    IUniswapV2Router02 public immutable uniswapV2Router02;
 
     /// @param provider Aave lending pool addresses provider
     /// @param _uniswapFactory Uniswap V2 factory address
-    constructor(address provider, address _uniswapFactory) {
+    constructor(
+        address provider,
+        address _uniswapFactory,
+        address _uniswapV2Router02
+    ) {
         ADDRESSES_PROVIDER = ILendingPoolAddressesProvider(provider);
         LENDING_POOL = ILendingPool(ILendingPoolAddressesProvider(provider).getLendingPool());
         uniswapFactory = IUniswapV2Factory(_uniswapFactory);
+        uniswapV2Router02 = IUniswapV2Router02(_uniswapV2Router02);
     }
 
     /// @dev Aave flash loan callback. Receives the token amounts and gives it back + premiums.
@@ -42,15 +49,10 @@ abstract contract Aave is IFlashLoanReceiver {
     ) external override returns (bool) {
         require(msg.sender == address(LENDING_POOL), "Callback only from LENDING_POOL");
         require(initiator == address(this), "FlashLoan only from this contract");
-
-        // This contract now has the funds requested
-        // Your logic goes here
-
-        // Approve the LendingPool contract to pull the owed amount + fee
-        for (uint256 i = 0; i < assets.length; i++) {
-            uint256 amountOwing = amounts[i].add(premiums[i]);
-            IERC20(assets[i]).approve(address(LENDING_POOL), amountOwing);
-        }
+        (address[] memory path, address onBehalfOf, uint256 repayMode, uint256 amountToRepay) =
+            abi.decode(params, (address[], address, uint256, uint256));
+        uniswapV2Router02.swapTokensForExactTokens(amountToRepay, amounts[0], path, address(this), block.timestamp);
+        LENDING_POOL.repay(path[path.length - 1], amountToRepay, repayMode, onBehalfOf);
         return true;
     }
 }
