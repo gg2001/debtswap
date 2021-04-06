@@ -4,14 +4,34 @@ pragma solidity ^0.7.6;
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import { ILendingPoolAddressesProvider } from "../interfaces/ILendingPoolAddressesProvider.sol";
 import { ILendingPool } from "../interfaces/ILendingPool.sol";
-import { AddressesProvider } from "./AddressesProvider.sol";
+import { IFlashLoanReceiver } from "../interfaces/IFlashLoanReceiver.sol";
+import { IUniswapV2Factory } from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 
 /// @author Ganesh Gautham Elango
 /// @title Aave flash loan contract
-abstract contract Aave is AddressesProvider {
+abstract contract Aave is IFlashLoanReceiver {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+
+    ILendingPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;
+    ILendingPool public immutable override LENDING_POOL;
+    IUniswapV2Factory public immutable uniswapFactory;
+    IUniswapV2Factory public immutable sushiFactory;
+
+    /// @param provider Aave lending pool addresses provider
+    /// @param _uniswapFactory Uniswap V2 factory address
+    constructor(
+        address provider,
+        address _uniswapFactory,
+        address _sushiFactory
+    ) {
+        ADDRESSES_PROVIDER = ILendingPoolAddressesProvider(provider);
+        LENDING_POOL = ILendingPool(ILendingPoolAddressesProvider(provider).getLendingPool());
+        uniswapFactory = IUniswapV2Factory(_uniswapFactory);
+        sushiFactory = IUniswapV2Factory(_sushiFactory);
+    }
 
     /// @dev Aave flash loan callback. Receives the token amounts and gives it back + premiums.
     /// @param assets The addresses of the assets being flash-borrowed
