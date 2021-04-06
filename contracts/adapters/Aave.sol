@@ -18,19 +18,13 @@ abstract contract Aave is IFlashLoanReceiver {
     ILendingPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;
     ILendingPool public immutable override LENDING_POOL;
     IUniswapV2Factory public immutable uniswapFactory;
-    IUniswapV2Factory public immutable sushiFactory;
 
     /// @param provider Aave lending pool addresses provider
     /// @param _uniswapFactory Uniswap V2 factory address
-    constructor(
-        address provider,
-        address _uniswapFactory,
-        address _sushiFactory
-    ) {
+    constructor(address provider, address _uniswapFactory) {
         ADDRESSES_PROVIDER = ILendingPoolAddressesProvider(provider);
         LENDING_POOL = ILendingPool(ILendingPoolAddressesProvider(provider).getLendingPool());
         uniswapFactory = IUniswapV2Factory(_uniswapFactory);
-        sushiFactory = IUniswapV2Factory(_sushiFactory);
     }
 
     /// @dev Aave flash loan callback. Receives the token amounts and gives it back + premiums.

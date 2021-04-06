@@ -15,9 +15,5 @@ contract DebtSwap is Aave {
 
     /// @param provider Aave lending pool addresses provider
     /// @param _uniswapFactory Uniswap V2 factory address
-    constructor(
-        address provider,
-        address _uniswapFactory,
-        address _sushiFactory
-    ) Aave(provider, _uniswapFactory, _sushiFactory) {}
+    constructor(address provider, address _uniswapFactory) Aave(provider, _uniswapFactory) {}
 }
