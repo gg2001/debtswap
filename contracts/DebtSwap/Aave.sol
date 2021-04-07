@@ -74,9 +74,8 @@ abstract contract Aave is IFlashLoanReceiver {
             uint256 amountOut = amounts[i + 1];
             (uint256 amount0Out, uint256 amount1Out) =
                 input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));
-            address to =
-                i < path.length - 2 ? UniswapV2Library.pairFor(address(uniswapFactory), output, path[i + 2]) : _to;
-            IUniswapV2Pair(UniswapV2Library.pairFor(address(uniswapFactory), input, output)).swap(
+            address to = i < path.length - 2 ? UniswapV2Library.pairFor(uniswapFactory, output, path[i + 2]) : _to;
+            IUniswapV2Pair(UniswapV2Library.pairFor(uniswapFactory, input, output)).swap(
                 amount0Out,
                 amount1Out,
                 to,
