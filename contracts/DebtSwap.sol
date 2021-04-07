@@ -28,7 +28,6 @@ contract DebtSwap is Aave {
         uint256 repayAmount,
         uint256 borrowMode,
         uint256 repayMode,
-        uint256 minAmountIn,
         uint256 maxAmountIn,
         address debtTokenAddress,
         address[] calldata path
@@ -42,7 +41,7 @@ contract DebtSwap is Aave {
         uint256[] memory amountsIn = UniswapV2Library.getAmountsIn(address(uniswapFactory), amountToRepay, path);
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amountsIn[amountsIn.length - 1];
-        require((maxAmountIn >= amounts[0]) && (amounts[0] >= minAmountIn), "Exceeded slippage");
+        require(maxAmountIn >= amounts[0], "Exceeded slippage");
         uint256[] memory modes = new uint256[](1);
         modes[0] = borrowMode;
         bytes memory params = abi.encode(path, repayMode, amountToRepay, msg.sender);
