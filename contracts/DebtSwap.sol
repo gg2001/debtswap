@@ -4,7 +4,6 @@ pragma solidity ^0.7.6;
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import { IUniswapV2Factory } from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import { UniswapV2Library } from "./libraries/UniswapV2Library.sol";
 import { ILendingPool } from "./interfaces/ILendingPool.sol";
 import { Aave } from "./adapters/Aave.sol";
@@ -17,12 +16,7 @@ contract DebtSwap is Aave {
 
     /// @param provider Aave lending pool addresses provider
     /// @param _uniswapFactory Uniswap V2 factory address
-    /// @param _uniswapV2Router02 Uniswap V2 router 02 address
-    constructor(
-        address provider,
-        address _uniswapFactory,
-        address _uniswapV2Router02
-    ) Aave(provider, _uniswapFactory, _uniswapV2Router02) {}
+    constructor(address provider, address _uniswapFactory) Aave(provider, _uniswapFactory) {}
 
     /// @dev Swaps debt, must approveDelegation maxAmountIn of assets[0] before calling
     /// @param assets Must be length 1, [<the asset you are swapping to>]
@@ -48,13 +42,20 @@ contract DebtSwap is Aave {
             repayAmount = IERC20(debtTokenAddress).balanceOf(msg.sender);
         }
         uint256[] memory amounts = new uint256[](1);
+        uint256[] memory amountsIn = UniswapV2Library.getAmountsIn(uniswapFactory, amountToRepay, path);
+        require(maxAmountIn >= amountsIn[0], "Exceeded slippage");
+        amounts[0] = amountsIn[0];
+        bytes memory params = abi.encode(path, amountsIn, msg.sender, repayMode, amountToRepay);
         // Stack too deep
-        {
-            uint256[] memory amountsIn = UniswapV2Library.getAmountsIn(address(uniswapFactory), amountToRepay, path);
-            require(maxAmountIn >= amountsIn[0], "Exceeded slippage");
-            amounts[0] = amountsIn[0];
-        }
-        bytes memory params = abi.encode(path, msg.sender, repayMode, amountToRepay);
+        _flashLoan(assets, amounts, modes, params);
+    }
+
+    function _flashLoan(
+        address[] calldata assets,
+        uint256[] memory amounts,
+        uint256[] calldata modes,
+        bytes memory params
+    ) internal {
         LENDING_POOL.flashLoan(
             address(this), // receiverAddress
             assets,
