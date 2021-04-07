@@ -7,17 +7,17 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import { UniswapV2Library } from "./libraries/UniswapV2Library.sol";
 import { ILendingPool } from "./interfaces/ILendingPool.sol";
 import { IDebtSwap } from "./interfaces/IDebtSwap.sol";
-import { Aave } from "./DebtSwap/Aave.sol";
+import { FlashLoan } from "./DebtSwap/FlashLoan.sol";
 
 /// @author Ganesh Gautham Elango
 /// @title DebtSwap contract for swapping your Aave debt
-contract DebtSwap is Aave, IDebtSwap {
+contract DebtSwap is FlashLoan, IDebtSwap {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     /// @param provider Aave lending pool addresses provider
     /// @param _uniswapFactory Uniswap V2 factory address
-    constructor(address provider, address _uniswapFactory) Aave(provider, _uniswapFactory) {}
+    constructor(address provider, address _uniswapFactory) FlashLoan(provider, _uniswapFactory) {}
 
     /// @dev Swaps debt, must approveDelegation maxAmountIn of assets[0] before calling
     /// @param assets Must be length 1, [<the asset you are swapping to>]

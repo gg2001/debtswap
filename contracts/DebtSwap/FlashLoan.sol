@@ -11,8 +11,8 @@ import { ILendingPool } from "../interfaces/ILendingPool.sol";
 import { IFlashLoanReceiver } from "../interfaces/IFlashLoanReceiver.sol";
 
 /// @author Ganesh Gautham Elango
-/// @title Aave flash loan receiver
-abstract contract Aave is IFlashLoanReceiver {
+/// @title Flash loan receiver
+contract FlashLoan is IFlashLoanReceiver {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
