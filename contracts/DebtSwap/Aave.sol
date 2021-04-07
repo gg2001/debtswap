@@ -54,7 +54,7 @@ abstract contract Aave is IFlashLoanReceiver {
             uint256 amountToRepay
         ) = abi.decode(params, (address[], uint256[], address, uint256, uint256));
         IERC20(path[0]).safeTransfer(
-            address(UniswapV2Library.pairFor(address(uniswapFactory), path[0], path[1])),
+            address(UniswapV2Library.pairFor(uniswapFactory, path[0], path[1])),
             amounts[0]
         );
         _swap(amountsIn, path, address(this));
