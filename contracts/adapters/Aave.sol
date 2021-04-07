@@ -56,7 +56,9 @@ abstract contract Aave is IFlashLoanReceiver {
         require(initiator == address(this), "FlashLoan only from this contract");
         (address[] memory path, address onBehalfOf, uint256 repayMode, uint256 amountToRepay) =
             abi.decode(params, (address[], address, uint256, uint256));
+        IERC20(path[0]).safeApprove(address(uniswapV2Router02), amountToRepay);
         uniswapV2Router02.swapTokensForExactTokens(amountToRepay, amounts[0], path, address(this), block.timestamp);
+        IERC20(path[path.length - 1]).safeApprove(address(LENDING_POOL), amountToRepay);
         LENDING_POOL.repay(path[path.length - 1], amountToRepay, repayMode, onBehalfOf);
         return true;
     }

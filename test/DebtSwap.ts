@@ -3,7 +3,14 @@ import { Signer, Wallet, BigNumber } from "ethers";
 import { expect } from "chai";
 import { ChainId, Token, Fetcher, Trade, Route, TokenAmount, TradeType, Percent, Pair, JSBI } from "@uniswap/sdk";
 
-import { DebtSwap, DebtSwap__factory, ERC20, ILendingPool, ILendingPoolAddressesProvider } from "../typechain";
+import {
+  DebtSwap,
+  DebtSwap__factory,
+  ERC20,
+  ILendingPool,
+  ILendingPoolAddressesProvider,
+  IStableDebtToken,
+} from "../typechain";
 import {
   lendingPoolProviderAddress,
   uniswapFactoryAddress,
@@ -14,6 +21,7 @@ describe("DebtSwap", () => {
   const impersonateAccount: string = "0xD465bE4e63bD09392bAC51Fcf04AA13412B552D0";
   const daiAddress: string = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
   const usdcAddress: string = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+  const usdcVariableDebtTokenAddress: string = "0xE4922afAB0BbaDd8ab2a88E0C79d884Ad337fcA6";
   const testAmountOut: string = "1000000000000000000000";
   const slippageTolerance: Percent = new Percent("100", "10000");
 
@@ -71,11 +79,36 @@ describe("DebtSwap", () => {
     expect(getUniswapV2Router02).to.equal(uniswapV2Router02Address);
   });
 
-  it("trade", async () => {
+  it("swap debt from DAI testAmountOut to usdc", async () => {
+    await network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [impersonateAccount],
+    });
+    const impersonateAccountSigner: Signer = await ethers.provider.getSigner(impersonateAccount);
     const trade: Trade = new Trade(route, new TokenAmount(daiToken, testAmountOut), TradeType.EXACT_OUTPUT);
     const amountInMax: JSBI = trade.maximumAmountIn(slippageTolerance).raw;
-    console.log(amountInMax.toString());
     const pathInput: string[] = trade.route.path.map((token: Token) => token.address);
-    console.log(pathInput);
+    const debtToken = (await ethers.getContractAt(
+      "contracts/interfaces/IStableDebtToken.sol:IStableDebtToken",
+      usdcVariableDebtTokenAddress,
+    )) as IStableDebtToken;
+    await debtToken
+      .connect(impersonateAccountSigner)
+      .approveDelegation(debtSwap.address, BigNumber.from(amountInMax.toString()));
+    await debtSwap
+      .connect(impersonateAccountSigner)
+      .swapDebt(
+        [usdc.address],
+        pathInput,
+        [1],
+        testAmountOut,
+        BigNumber.from(amountInMax.toString()),
+        2,
+        "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      );
+    await network.provider.request({
+      method: "hardhat_stopImpersonatingAccount",
+      params: [impersonateAccount],
+    });
   });
 });
