@@ -92,6 +92,18 @@ describe("DebtSwap", () => {
       "contracts/interfaces/IStableDebtToken.sol:IStableDebtToken",
       usdcVariableDebtTokenAddress,
     )) as IStableDebtToken;
+
+    const debtTokenOld: ERC20 = (await ethers.getContractAt(
+      "@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20",
+      "0x6C3c78838c761c6Ac7bE9F59fe808ea2A6E4379d",
+    )) as ERC20;
+    const debtTokenNew: ERC20 = (await ethers.getContractAt(
+      "@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20",
+      usdcVariableDebtTokenAddress,
+    )) as ERC20;
+    console.log("DAI Debt", (await debtTokenOld.balanceOf(impersonateAccount)).toString());
+    console.log("USDC Debt", (await debtTokenNew.balanceOf(impersonateAccount)).toString());
+      console.log("Swap Debt");
     await debtToken
       .connect(impersonateAccountSigner)
       .approveDelegation(debtSwap.address, BigNumber.from(amountInMax.toString()));
@@ -106,6 +118,8 @@ describe("DebtSwap", () => {
         2,
         "0x6B175474E89094C44Da98b954EedeAC495271d0F",
       );
+      console.log("DAI Debt", (await debtTokenOld.balanceOf(impersonateAccount)).toString());
+      console.log("USDC Debt", (await debtTokenNew.balanceOf(impersonateAccount)).toString());
     await network.provider.request({
       method: "hardhat_stopImpersonatingAccount",
       params: [impersonateAccount],
