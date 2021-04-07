@@ -92,7 +92,7 @@ describe("DebtSwap", () => {
       "contracts/interfaces/IStableDebtToken.sol:IStableDebtToken",
       usdcVariableDebtTokenAddress,
     )) as IStableDebtToken;
-
+      console.log(amountInMax.toString());
     const debtTokenOld: ERC20 = (await ethers.getContractAt(
       "@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20",
       "0x6C3c78838c761c6Ac7bE9F59fe808ea2A6E4379d",
