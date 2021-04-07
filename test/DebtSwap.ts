@@ -173,7 +173,7 @@ describe("DebtSwap", () => {
     });
   });
 
-  it("swap from variable DAI debt maxAmount to USDC variable debt", async () => {
+  it("swap from variable DAI debt maxAmount to USDC stable debt", async () => {
     await network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [impersonateAccount],
@@ -189,13 +189,13 @@ describe("DebtSwap", () => {
     const pathInput: string[] = trade.route.path.map((token: Token) => token.address);
     const debtToken: IVariableDebtToken = (await ethers.getContractAt(
       "contracts/interfaces/IVariableDebtToken.sol:IVariableDebtToken",
-      usdcVariableDebtTokenAddress,
+      usdcStableDebtTokenAddress,
     )) as IVariableDebtToken;
-    const usdcVariableDebtToken: ERC20 = (await ethers.getContractAt(
+    const usdcStableDebtToken: ERC20 = (await ethers.getContractAt(
       "@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20",
-      usdcVariableDebtTokenAddress,
+      usdcStableDebtTokenAddress,
     )) as ERC20;
-    const beforeUsdcDebt: BigNumber = await usdcVariableDebtToken.balanceOf(impersonateAccount);
+    const beforeUsdcDebt: BigNumber = await usdcStableDebtToken.balanceOf(impersonateAccount);
     await debtToken
       .connect(impersonateAccountSigner)
       .approveDelegation(debtSwap.address, BigNumber.from(amountInMax.toString()));
@@ -204,14 +204,14 @@ describe("DebtSwap", () => {
       .swapDebt(
         [usdc.address],
         pathInput,
-        [2],
+        [1],
         ethers.constants.MaxUint256,
         BigNumber.from(amountInMax.toString()),
         2,
         daiVariableDebtToken.address,
       );
     const afterDaiDebt: BigNumber = await daiVariableDebtToken.balanceOf(impersonateAccount);
-    const afterUsdcDebt: BigNumber = await usdcVariableDebtToken.balanceOf(impersonateAccount);
+    const afterUsdcDebt: BigNumber = await usdcStableDebtToken.balanceOf(impersonateAccount);
     expect(afterDaiDebt).to.equal(BigNumber.from(0));
     expect(afterUsdcDebt).to.gt(beforeUsdcDebt);
     await network.provider.request({
