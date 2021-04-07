@@ -11,18 +11,23 @@ import { ILendingPool } from "../interfaces/ILendingPool.sol";
 import { IFlashLoanReceiver } from "../interfaces/IFlashLoanReceiver.sol";
 
 /// @author Ganesh Gautham Elango
-/// @title Aave flash loan contract
+/// @title Aave flash loan receiver
 abstract contract Aave is IFlashLoanReceiver {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    /// @dev Aave lending pool addresses provider
     ILendingPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;
+    /// @dev Aave lending pool address
     ILendingPool public immutable override LENDING_POOL;
+    /// @dev Uniswap V2 factory address
     IUniswapV2Factory public immutable uniswapFactory;
+    /// @dev Uniswap V2 router 02 address
     IUniswapV2Router02 public immutable uniswapV2Router02;
 
     /// @param provider Aave lending pool addresses provider
     /// @param _uniswapFactory Uniswap V2 factory address
+    /// @param _uniswapV2Router02 Uniswap V2 router 02 address
     constructor(
         address provider,
         address _uniswapFactory,

@@ -10,40 +10,48 @@ import { ILendingPool } from "./interfaces/ILendingPool.sol";
 import { Aave } from "./adapters/Aave.sol";
 
 /// @author Ganesh Gautham Elango
-/// @title Aave flash loan contract
+/// @title DebtSwap contract for swapping your Aave debt
 contract DebtSwap is Aave {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     /// @param provider Aave lending pool addresses provider
     /// @param _uniswapFactory Uniswap V2 factory address
+    /// @param _uniswapV2Router02 Uniswap V2 router 02 address
     constructor(
         address provider,
         address _uniswapFactory,
         address _uniswapV2Router02
     ) Aave(provider, _uniswapFactory, _uniswapV2Router02) {}
 
+    /// @dev Swaps debt, must approveDelegation maxAmountIn of assets[0] before calling
+    /// @param assets Must be length 1, [<the asset you are swapping to>]
+    /// @param path Uniswap router path, path[0] == assets[0],
+    ///             path[path.length - 1] == asset you are swapping from
+    /// @param repayAmount Amount of asset you are swapping from
+    /// @param maxAmountIn Maximum amount you want to swap to
+    /// @param debtTokenAddress Debt token address of asset you are swapping from
+    ///                         (optional, should be passed when repayAmount = type(uint256).max)
     function swapDebt(
-        address borrowAsset,
+        address[] calldata assets,
+        address[] calldata path,
+        uint256[] calldata modes,
         uint256 repayAmount,
-        uint256 borrowMode,
-        uint256 repayMode,
         uint256 maxAmountIn,
-        address debtTokenAddress,
-        address[] calldata path
+        uint256 repayMode,
+        address debtTokenAddress
     ) external {
-        address[] memory assets = new address[](1);
-        assets[0] = borrowAsset;
         uint256 amountToRepay = repayAmount;
         if (repayAmount == type(uint256).max) {
-            amountToRepay = IERC20(debtTokenAddress).balanceOf(msg.sender);
+            repayAmount = IERC20(debtTokenAddress).balanceOf(msg.sender);
         }
-        uint256[] memory amountsIn = UniswapV2Library.getAmountsIn(address(uniswapFactory), amountToRepay, path);
         uint256[] memory amounts = new uint256[](1);
-        amounts[0] = amountsIn[amountsIn.length - 1];
-        require(maxAmountIn >= amounts[0], "Exceeded slippage");
-        uint256[] memory modes = new uint256[](1);
-        modes[0] = borrowMode;
+        // Stack too deep
+        {
+            uint256[] memory amountsIn = UniswapV2Library.getAmountsIn(address(uniswapFactory), amountToRepay, path);
+            require(maxAmountIn >= amountsIn[0], "Exceeded slippage");
+            amounts[0] = amountsIn[0];
+        }
         bytes memory params = abi.encode(path, repayMode, amountToRepay, msg.sender);
         LENDING_POOL.flashLoan(
             address(this), // receiverAddress

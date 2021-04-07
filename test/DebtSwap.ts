@@ -1,12 +1,11 @@
 import { ethers, network } from "hardhat";
 import { Signer, Wallet, BigNumber } from "ethers";
 import { expect } from "chai";
-import { ChainId, Token, WETH, Fetcher, Trade, Route, TokenAmount, TradeType, Percent, Pair, JSBI } from "@uniswap/sdk";
+import { ChainId, Token, Fetcher, Trade, Route, TokenAmount, TradeType, Percent, Pair, JSBI } from "@uniswap/sdk";
 
-import { DebtSwap, IERC20, IUniswapV2Factory, IUniswapV2Pair, DebtSwap__factory, ERC20 } from "../typechain";
+import { DebtSwap, DebtSwap__factory, ERC20, ILendingPool, ILendingPoolAddressesProvider } from "../typechain";
 import {
   lendingPoolProviderAddress,
-  lendingPool,
   uniswapFactoryAddress,
   uniswapV2Router02Address,
 } from "../scripts/constants/addresses";
@@ -15,29 +14,68 @@ describe("DebtSwap", () => {
   const impersonateAccount: string = "0xD465bE4e63bD09392bAC51Fcf04AA13412B552D0";
   const daiAddress: string = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
   const usdcAddress: string = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-  const daiToken: Token = new Token(ChainId.MAINNET, daiAddress, 18);
-  const usdcToken: Token = new Token(ChainId.MAINNET, usdcAddress, 6);
-  const path: [Token, Token][] = [[usdcToken, daiToken]];
+  const testAmountOut: string = "1000000000000000000000";
   const slippageTolerance: Percent = new Percent("100", "10000");
 
   let accounts: Signer[];
   let debtSwap: DebtSwap;
-  let uniswapV2Factory: IUniswapV2Factory;
-  let dai: IERC20;
-  let usdc: IERC20;
+  let lendingPool: ILendingPool;
+  let lendingPoolAddressesProvider: ILendingPoolAddressesProvider;
+  let dai: ERC20;
+  let usdc: ERC20;
+  let daiToken: Token;
+  let usdcToken: Token;
+  let path: [Token, Token][];
+  let routePath: Pair[];
+  let route: Route;
 
   beforeEach(async () => {
     accounts = await ethers.getSigners();
+
+    const aaveFactory: DebtSwap__factory = (await ethers.getContractFactory(
+      "contracts/DebtSwap.sol:DebtSwap",
+      <Wallet>accounts[0],
+    )) as DebtSwap__factory;
+    debtSwap = await aaveFactory.deploy(lendingPoolProviderAddress, uniswapFactoryAddress, uniswapV2Router02Address);
+
+    lendingPoolAddressesProvider = (await ethers.getContractAt(
+      "contracts/interfaces/ILendingPoolAddressesProvider.sol:ILendingPoolAddressesProvider",
+      lendingPoolProviderAddress,
+    )) as ILendingPoolAddressesProvider;
+
+    const lendingPoolAddress: string = await lendingPoolAddressesProvider.getLendingPool();
+    lendingPool = (await ethers.getContractAt(
+      "contracts/interfaces/ILendingPool.sol:ILendingPool",
+      lendingPoolAddress,
+    )) as ILendingPool;
+
+    dai = (await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20", daiAddress)) as ERC20;
+    usdc = (await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20", usdcAddress)) as ERC20;
+    daiToken = new Token(ChainId.MAINNET, dai.address, await dai.decimals());
+    usdcToken = new Token(ChainId.MAINNET, usdc.address, await usdc.decimals());
+    path = [[usdcToken, daiToken]];
+    routePath = await Promise.all(
+      path.map((pair: [Token, Token]) => Fetcher.fetchPairData(pair[0], pair[1], ethers.provider)),
+    );
+    route = new Route(routePath, usdcToken);
   });
 
-  it("constructor should initialize state variables", async () => {
-    const routePath: Pair[] = await Promise.all(
-      path.map(pair => Fetcher.fetchPairData(pair[0], pair[1], ethers.provider)),
-    );
-    const route: Route = new Route(routePath, usdcToken);
-    const amountOut: string = "100000000000000000000";
-    const trade: Trade = new Trade(route, new TokenAmount(daiToken, amountOut), TradeType.EXACT_OUTPUT);
+  it("should initialize state variables", async () => {
+    const getAddressesProvider: string = await debtSwap.ADDRESSES_PROVIDER();
+    expect(getAddressesProvider).to.equal(lendingPoolProviderAddress);
+    const getLendingPool: string = await debtSwap.LENDING_POOL();
+    expect(getLendingPool).to.equal(lendingPool.address);
+    const getUniswapFactory: string = await debtSwap.uniswapFactory();
+    expect(getUniswapFactory).to.equal(uniswapFactoryAddress);
+    const getUniswapV2Router02: string = await debtSwap.uniswapV2Router02();
+    expect(getUniswapV2Router02).to.equal(uniswapV2Router02Address);
+  });
+
+  it("trade", async () => {
+    const trade: Trade = new Trade(route, new TokenAmount(daiToken, testAmountOut), TradeType.EXACT_OUTPUT);
     const amountInMax: JSBI = trade.maximumAmountIn(slippageTolerance).raw;
     console.log(amountInMax.toString());
+    const pathInput: string[] = trade.route.path.map((token: Token) => token.address);
+    console.log(pathInput);
   });
 });
