@@ -40,7 +40,7 @@ contract DebtSwap is Aave, IDebtSwap {
     ) external override {
         uint256 amountToRepay = repayAmount;
         if (repayAmount == type(uint256).max) {
-            repayAmount = IERC20(debtTokenAddress).balanceOf(msg.sender);
+            amountToRepay = IERC20(debtTokenAddress).balanceOf(msg.sender);
         }
         uint256[] memory amounts = new uint256[](1);
         uint256[] memory amountsIn = UniswapV2Library.getAmountsIn(uniswapFactory, amountToRepay, path);
