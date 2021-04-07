@@ -44,8 +44,8 @@ abstract contract Aave is IFlashLoanReceiver {
         address initiator,
         bytes calldata params
     ) external override returns (bool) {
-        require(msg.sender == address(LENDING_POOL), "Callback only from LENDING_POOL");
-        require(initiator == address(this), "FlashLoan only from this contract");
+        require(msg.sender == address(LENDING_POOL), "DebtSwap: Callback only from LENDING_POOL");
+        require(initiator == address(this), "DebtSwap: FlashLoan only from this contract");
         (
             address[] memory path,
             uint256[] memory amountsIn,

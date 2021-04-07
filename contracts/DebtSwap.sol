@@ -6,7 +6,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import { UniswapV2Library } from "./libraries/UniswapV2Library.sol";
 import { ILendingPool } from "./interfaces/ILendingPool.sol";
-import { Aave } from "./adapters/Aave.sol";
+import { Aave } from "./DebtSwap/Aave.sol";
 
 /// @author Ganesh Gautham Elango
 /// @title DebtSwap contract for swapping your Aave debt
@@ -43,7 +43,7 @@ contract DebtSwap is Aave {
         }
         uint256[] memory amounts = new uint256[](1);
         uint256[] memory amountsIn = UniswapV2Library.getAmountsIn(uniswapFactory, amountToRepay, path);
-        require(maxAmountIn >= amountsIn[0], "Exceeded slippage");
+        require(maxAmountIn >= amountsIn[0], "DebtSwap: Exceeded slippage");
         amounts[0] = amountsIn[0];
         bytes memory params = abi.encode(path, amountsIn, msg.sender, repayMode, amountToRepay);
         // Stack too deep
