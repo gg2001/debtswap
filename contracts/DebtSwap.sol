@@ -6,11 +6,12 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import { UniswapV2Library } from "./libraries/UniswapV2Library.sol";
 import { ILendingPool } from "./interfaces/ILendingPool.sol";
+import { IDebtSwap } from "./interfaces/IDebtSwap.sol";
 import { Aave } from "./DebtSwap/Aave.sol";
 
 /// @author Ganesh Gautham Elango
 /// @title DebtSwap contract for swapping your Aave debt
-contract DebtSwap is Aave {
+contract DebtSwap is Aave, IDebtSwap {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -36,7 +37,7 @@ contract DebtSwap is Aave {
         uint256 maxAmountIn,
         uint256 repayMode,
         address debtTokenAddress
-    ) external {
+    ) external override {
         uint256 amountToRepay = repayAmount;
         if (repayAmount == type(uint256).max) {
             repayAmount = IERC20(debtTokenAddress).balanceOf(msg.sender);
