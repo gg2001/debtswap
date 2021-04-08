@@ -12,6 +12,7 @@ interface IDebtSwap {
     /// @param repayMode Mode of debt you are swapping from, must be 1 (stable) or 2 (variable)
     /// @param debtTokenAddress Debt token address of asset you are swapping from
     ///                         (optional, should be passed when repayAmount = type(uint256).max)
+    /// @param uniswapFactory address of Uniswap/Sushiswap factory
     function swapDebt(
         address[] calldata assets,
         address[] calldata path,
@@ -19,6 +20,7 @@ interface IDebtSwap {
         uint256 repayAmount,
         uint256 maxAmountIn,
         uint256 repayMode,
-        address debtTokenAddress
+        address debtTokenAddress,
+        address uniswapFactory
     ) external;
 }

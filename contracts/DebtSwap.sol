@@ -16,8 +16,7 @@ contract DebtSwap is FlashLoan, IDebtSwap {
     using SafeERC20 for IERC20;
 
     /// @param provider Aave lending pool addresses provider
-    /// @param _uniswapFactory Uniswap V2 factory address
-    constructor(address provider, address _uniswapFactory) FlashLoan(provider, _uniswapFactory) {}
+    constructor(address provider) FlashLoan(provider) {}
 
     /// @dev Swaps debt, must approveDelegation maxAmountIn of assets[0] before calling
     /// @param assets Must be length 1, [<the asset you are swapping to>]
@@ -29,6 +28,7 @@ contract DebtSwap is FlashLoan, IDebtSwap {
     /// @param repayMode Mode of debt you are swapping from, must be 1 (stable) or 2 (variable)
     /// @param debtTokenAddress Debt token address of asset you are swapping from
     ///                         (optional, should be passed when repayAmount = type(uint256).max)
+    /// @param uniswapFactory address of Uniswap/Sushiswap factory
     function swapDebt(
         address[] calldata assets,
         address[] calldata path,
@@ -36,7 +36,8 @@ contract DebtSwap is FlashLoan, IDebtSwap {
         uint256 repayAmount,
         uint256 maxAmountIn,
         uint256 repayMode,
-        address debtTokenAddress
+        address debtTokenAddress,
+        address uniswapFactory
     ) external override {
         uint256 amountToRepay = repayAmount;
         if (repayAmount == type(uint256).max) {
@@ -46,7 +47,7 @@ contract DebtSwap is FlashLoan, IDebtSwap {
         uint256[] memory amountsIn = UniswapV2Library.getAmountsIn(uniswapFactory, amountToRepay, path);
         require(maxAmountIn >= amountsIn[0], "DebtSwap: Exceeded slippage");
         amounts[0] = amountsIn[0];
-        bytes memory params = abi.encode(path, amountsIn, msg.sender, repayMode, amountToRepay);
+        bytes memory params = abi.encode(path, amountsIn, msg.sender, uniswapFactory, repayMode, amountToRepay);
         // Stack too deep
         _flashLoan(assets, amounts, modes, params);
     }

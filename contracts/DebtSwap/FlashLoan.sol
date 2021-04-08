@@ -20,15 +20,11 @@ contract FlashLoan is IFlashLoanReceiver {
     ILendingPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;
     /// @dev Aave lending pool address
     ILendingPool public immutable override LENDING_POOL;
-    /// @dev Uniswap V2 factory address
-    address public immutable uniswapFactory;
 
     /// @param provider Aave lending pool addresses provider
-    /// @param _uniswapFactory Uniswap V2 factory address
-    constructor(address provider, address _uniswapFactory) {
+    constructor(address provider) {
         ADDRESSES_PROVIDER = ILendingPoolAddressesProvider(provider);
         LENDING_POOL = ILendingPool(ILendingPoolAddressesProvider(provider).getLendingPool());
-        uniswapFactory = _uniswapFactory;
     }
 
     /// @dev Aave flash loan callback. Receives the token amounts and gives it back + premiums.
@@ -50,14 +46,12 @@ contract FlashLoan is IFlashLoanReceiver {
             address[] memory path,
             uint256[] memory amountsIn,
             address onBehalfOf,
+            address uniswapFactory,
             uint256 repayMode,
             uint256 amountToRepay
-        ) = abi.decode(params, (address[], uint256[], address, uint256, uint256));
-        IERC20(path[0]).safeTransfer(
-            address(UniswapV2Library.pairFor(uniswapFactory, path[0], path[1])),
-            amounts[0]
-        );
-        _swap(amountsIn, path, address(this));
+        ) = abi.decode(params, (address[], uint256[], address, address, uint256, uint256));
+        IERC20(path[0]).safeTransfer(address(UniswapV2Library.pairFor(uniswapFactory, path[0], path[1])), amounts[0]);
+        _swap(amountsIn, path, address(this), uniswapFactory);
         IERC20(path[path.length - 1]).safeApprove(address(LENDING_POOL), amountToRepay);
         LENDING_POOL.repay(path[path.length - 1], amountToRepay, repayMode, onBehalfOf);
         return true;
@@ -66,7 +60,8 @@ contract FlashLoan is IFlashLoanReceiver {
     function _swap(
         uint256[] memory amounts,
         address[] memory path,
-        address _to
+        address _to,
+        address uniswapFactory
     ) internal virtual {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);

@@ -44,7 +44,7 @@ describe("DebtSwap", () => {
       "contracts/DebtSwap.sol:DebtSwap",
       <Wallet>accounts[0],
     )) as DebtSwap__factory;
-    debtSwap = await aaveFactory.deploy(lendingPoolProviderAddress, uniswapFactoryAddress);
+    debtSwap = await aaveFactory.deploy(lendingPoolProviderAddress);
 
     lendingPoolAddressesProvider = (await ethers.getContractAt(
       "contracts/interfaces/ILendingPoolAddressesProvider.sol:ILendingPoolAddressesProvider",
@@ -73,8 +73,6 @@ describe("DebtSwap", () => {
     expect(getAddressesProvider).to.equal(lendingPoolProviderAddress);
     const getLendingPool: string = await debtSwap.LENDING_POOL();
     expect(getLendingPool).to.equal(lendingPool.address);
-    const getUniswapFactory: string = await debtSwap.uniswapFactory();
-    expect(getUniswapFactory).to.equal(uniswapFactoryAddress);
   });
 
   it("swap from variable DAI debt testAmountOut to USDC stable debt", async () => {
@@ -114,6 +112,7 @@ describe("DebtSwap", () => {
         BigNumber.from(amountInMax.toString()),
         2,
         daiVariableDebtToken.address,
+        uniswapFactoryAddress,
       );
     const afterDaiDebt: BigNumber = await daiVariableDebtToken.balanceOf(impersonateAccount);
     const afterUsdcDebt: BigNumber = await usdcStableDebtToken.balanceOf(impersonateAccount);
@@ -162,6 +161,7 @@ describe("DebtSwap", () => {
         BigNumber.from(amountInMax.toString()),
         2,
         daiVariableDebtToken.address,
+        uniswapFactoryAddress,
       );
     const afterDaiDebt: BigNumber = await daiVariableDebtToken.balanceOf(impersonateAccount);
     const afterUsdcDebt: BigNumber = await usdcVariableDebtToken.balanceOf(impersonateAccount);
@@ -209,6 +209,7 @@ describe("DebtSwap", () => {
         BigNumber.from(amountInMax.toString()),
         2,
         daiVariableDebtToken.address,
+        uniswapFactoryAddress,
       );
     const afterDaiDebt: BigNumber = await daiVariableDebtToken.balanceOf(impersonateAccount);
     const afterUsdcDebt: BigNumber = await usdcStableDebtToken.balanceOf(impersonateAccount);
@@ -261,6 +262,7 @@ describe("DebtSwap", () => {
         BigNumber.from(amountInMax.toString()),
         1,
         usdcStableDebtToken.address,
+        uniswapFactoryAddress,
       );
     const afterUsdcDebt: BigNumber = await usdcStableDebtToken.balanceOf(impersonateAccount);
     const afterDaiDebt: BigNumber = await daiVariableDebtToken.balanceOf(impersonateAccount);
