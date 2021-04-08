@@ -20,6 +20,8 @@ contract FlashLoan is IFlashLoanReceiver {
     ILendingPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;
     /// @dev Aave lending pool address
     ILendingPool public immutable override LENDING_POOL;
+    /// @dev Aave referral code
+    uint16 public constant referralCode = 185;
 
     /// @param provider Aave lending pool addresses provider
     constructor(address provider) {

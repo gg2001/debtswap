@@ -65,7 +65,7 @@ contract DebtSwap is FlashLoan, IDebtSwap {
             modes,
             msg.sender, // onBehalfOf
             params,
-            0 // referralCode
+            referralCode // referralCode
         );
     }
 }
